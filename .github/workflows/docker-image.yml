@@ -9,6 +9,7 @@ on:
 
 
 jobs:
+
   build-and-push:
     runs-on: ubuntu-latest
     steps:
@@ -26,4 +27,23 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/tomi-docker-image:latest      
+          tags: ${{ secrets.DOCKER_USERNAME }}/tomi-docker-image:latest    
+  deploy-to-ec2-instances:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to EC2 Instances
+      env: 
+        EC2_USER: ${{ secrets.EC2_USER }}
+        EC2_HOST: ${{ secrets.EC2_HOST }}
+        EC2_KEY: ${{ secrets.EC2_PRIVATE_KEY }}
+      run: |
+        echo "$EC2_KEY" > private_key.pem
+        chmod 400 private_key.pem
+        ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST << 'EOF'
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker pull ${{ secrets.DOCKER_USERNAME }}/tomi-docker-image:latest
+          docker stop tomi-container || true
+          docker rm tomi-container || true
+          docker run -d --name tomi-container -p 80:80 ${{ secrets.DOCKER_USERNAME }}/tomi-docker-image:latest
+        EOF
