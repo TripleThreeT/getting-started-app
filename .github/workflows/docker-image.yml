@@ -41,9 +41,9 @@ jobs:
         echo "$EC2_KEY" > private_key.pem
         chmod 400 private_key.pem
         ssh -o StrictHostKeyChecking=no -i private_key.pem $EC2_USER@$EC2_HOST << 'EOF'
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker pull ${{ secrets.DOCKER_USERNAME }}/tomi-docker-image:latest
-          docker stop tomi-container || true
-          docker rm tomi-container || true
-          docker run -d --name tomi-container -p 80:80 ${{ secrets.DOCKER_USERNAME }}/tomi-docker-image:latest
+         sudo  docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          sudo  docker pull ${{ secrets.DOCKER_USERNAME }}/tomi-docker-image:latest
+          sudo  docker stop tomi-container || true
+          sudo  docker rm tomi-container || true
+          sudo  docker run -d --name tomi-container -p 80:80 ${{ secrets.DOCKER_USERNAME }}/tomi-docker-image:latest
         EOF
